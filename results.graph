@@ -1,0 +1,16 @@
+#! /usr/bin/gnuplot -persist
+set terminal postscript eps enhanced
+set output "graph.ps"
+set encoding utf8
+set style line 1 lt 1 lw 3
+set key box linestyle 1
+set xlabel "H"
+set logscale x
+set ylabel "M"
+set yrange [0:0.1]
+set xrange [0.001:0.1]
+set format x "10^{%L}"
+set ytics 0.05
+set mytics 10
+set grid xtics ytics mytics mxtics lt 0 lw 1
+plot "data.txt" using 2:3 with linespoints linestyle 2 smooth bezier title 'interpolation (p)', "data.txt" using 2:3 title '50 parts (p)', "data.txt" using 2:4 with linespoints linestyle 3 smooth bezier title 'interpolation (t)', "data.txt" using 2:4 title '50 parts (t)'

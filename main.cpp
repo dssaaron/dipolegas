@@ -456,7 +456,7 @@ int main() {
         //cout << "M = " << M/N << endl;
         points[pc][1] = M/((N-30000)*M_PI*tubeDiam/4*tubeDiam*tubeLen);
         M = 0;
-        output << points[pc][0] << " " << points[pc][1] << endl;
+        output << points[pc][0] << " " << points[pc][0] - kappa*points[pc][1] << " " << points[pc][1] << endl;
         //cout << "\nPractical:" << points[k][1];
         //cout << "\n" << (-moment*mu*H)/(k*T) << endl;
         //cout << -mu*moment*moment/(4*M_PI*k*T) << endl;
