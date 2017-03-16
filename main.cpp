@@ -39,6 +39,9 @@ double moment = 1;                      //
 double T = 0.7E+16;                         //
 double H = 0;                           //
 
+double lambda;
+double beta;
+
 double randomPoint(double b, double a) {                                            //selecting random angle cos
     
     return a + rand()%1000000*(b-a)/1000000;
@@ -49,17 +52,15 @@ double theorMagnet (double H) {
     double ksi;
     
     ksi = (moment*mu*H)/(k*T);
-    ksi = mu*moment*((moment * phi *(cosh(ksi)/sinh(ksi) - 1/ksi))/3 + H)/(k*T);
+    //ksi = mu*moment*((moment * phi *(cosh(ksi)/sinh(ksi) - 1/ksi))/3 + H)/(k*T);
+    ksi = H + moment*phi*(cosh(ksi)/sinh(ksi) - 1/ksi)/3;
     return moment * phi *(cosh(ksi)/sinh(ksi) - 1/ksi);
 }
 
 bool checkPotential(int a) {
     
     double P[2];
-    double lambda;
     double distance = 0;
-    double beta;                                                                //(-moment*mu*H)/(k*T)
-    
     double e10r, e20r, e11r, e21r, rr1, rr2, e1e20, e1e21;
     double p0, p1;
     
@@ -67,14 +68,11 @@ bool checkPotential(int a) {
     
     //cout << "potential check" << endl;
     
-    beta = (-moment*mu*H)/(k*T);
-    //beta = 1;
-    
-    P[0] = beta * particle[a][3] * sqrt(1-particle[a][5]*particle[a][5]);
+    P[0] = -beta * particle[a][3] * sqrt(1-particle[a][5]*particle[a][5]);
     //cout << particle[a][3] << " ";
     //cout << "P[0] = " << P[0] << endl;
     
-    P[1] = beta * d[3] * sqrt(1-d[5]*d[5]);
+    P[1] = -beta * d[3] * sqrt(1-d[5]*d[5]);
     //cout << d[3] << endl;
     //cout << "P[1] = " << P[1] << endl;
     
@@ -92,7 +90,7 @@ bool checkPotential(int a) {
         distance = sqrt(distance);
             //cout << "distance old = " << distance << endl;
     
-            lambda = -mu*moment*moment*partSize*partSize*partSize/(4*M_PI*k*T*distance*distance*distance); //lambda /Rij^3
+            //lambda = -mu*moment*moment*partSize*partSize*partSize/(4*M_PI*k*T*distance*distance*distance); //lambda /Rij^3
             
             e10r = (particle[a][4] * sqrt(1-particle[a][5]*particle[a][5]) * (particle[b][1]-particle[a][1]) +
                     particle[a][3] * sqrt(1-particle[a][5]*particle[a][5]) * (particle[b][0]-particle[a][0]) +
@@ -111,7 +109,7 @@ bool checkPotential(int a) {
                      particle[a][4] * sqrt(1-particle[a][5]*particle[a][5]) * particle[b][4] * sqrt(1-particle[b][5]*particle[b][5]) +
                      particle[a][5] * particle[b][5]);
             
-            P[0] += lambda * ((3*e10r*e20r/rr1)-e1e20);
+            P[0] += -lambda * ((3*e10r*e20r/rr1)-e1e20) /(distance*distance*distance) * partSize*partSize*partSize;
             //cout << "dP[0] = " << p0 << endl;
             //P[0] += p0;
             //cout << "P[0] = " << P[0] << endl;
@@ -148,7 +146,7 @@ bool checkPotential(int a) {
                     d[4] * sqrt(1-d[5]*d[5]) * particle[b][4] * sqrt(1-particle[b][5]*particle[b][5]) +
                     d[5] * particle[b][5];
             
-            P[1] += lambda * ((3*e11r*e21r/rr2)-e1e21);
+            P[1] += -lambda * ((3*e11r*e21r/rr2)-e1e21) /(distance*distance*distance) * partSize*partSize*partSize;;
             //cout << "dP[1] = " << p1 << endl;
             //P[1] += p1;
             //cout << "P[1] = " << P[1] << endl;
@@ -307,7 +305,7 @@ int main() {
     int pointN;
     double points[100][2];
     double angle;
-    double kappa = 2.550E-1;
+    double kappa = 1.948E-1;
     
     //std::ios::sync_with_stdio(false);
     
@@ -334,7 +332,9 @@ int main() {
     
     output << "# " << partN << " particles" << endl;
     
-    cout << "\nlambda = " << mu*moment*moment/(4*M_PI*partSize*partSize*partSize*k*T) << endl;
+    lambda = mu*moment*moment/(4*M_PI*partSize*partSize*partSize*k*T);
+    
+    cout << "\nlambda = " << lambda << endl;
     
     tubeDiam = pow(3*partN*partSize/(2*phi*tubeRatio), 0.3333333333);
     tubeLen = tubeRatio*tubeDiam;
@@ -357,6 +357,7 @@ int main() {
         //cout << particle[i][3]*particle[i][3] + particle[i][4]*particle[i][4] << endl;
     }
     
+    cout << "\nSUPPOSED RESULTS\n";
     for (int k = 0; k < pointN; k++) {
         
         cout << points[k][0] << " " << theorMagnet(points[k][0]) << endl;
@@ -368,7 +369,10 @@ int main() {
         
         H = points[pc][0];
         cout << "\nH = " << H;
-        cout << "\nbeta = " << -mu*moment*H/(k*T) << "\n" << endl;
+        
+        beta = (moment*mu*H)/(k*T);
+        
+        cout << "\nbeta = " << beta << "\n" << endl;
     
         for (int j = 0; j < N; j++) {                                                   //MK steps
         
