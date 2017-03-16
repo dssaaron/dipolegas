@@ -31,7 +31,7 @@ double d[6], D;                         //stray & spin
 
 double tubeRatio=10, tubeLen, tubeDiam; //tube
 
-double phi = 0.02;                       //part concentration
+double phi = 0.2;                       //part concentration
 
 double mu = 1.256637E-6;                //
 double k = 1.380648E-23;                //
@@ -306,6 +306,8 @@ int main() {
     
     int pointN;
     double points[100][2];
+    double angle;
+    double kappa = 2.550E-1;
     
     //std::ios::sync_with_stdio(false);
     
@@ -338,18 +340,17 @@ int main() {
     tubeLen = tubeRatio*tubeDiam;
     cout << "\nTube L, D: " << tubeLen << ", " << tubeDiam << "\n" << endl;                   //size of tube by phi coefficient
     
+    cout << "kappa = " << kappa << endl;
+    
     for (int i=0; i<partN; i++) {                                                   //generate staring points of particles
         
+        angle = randomPoint(2*M_PI, 0);
+
         particle[i][0] = randomPoint(tubeLen/2, -tubeLen/2);                        // X Y Z
         particle[i][1] = randomPoint(tubeDiam/2, -tubeDiam/2);
         particle[i][2] = randomPoint(sqrt(pow(tubeDiam/2, 2)-pow(particle[i][1],2)), -sqrt(pow(tubeDiam/2, 2)-pow(particle[i][1],2)));
-        particle[i][3] = randomPoint(1, -1);                                        //moment's cos to x
-        //particle[i][4] = randomPoint(1, -1);                                        //moment's sin to x
-        if (randomPoint(1, 0) > 0.5) {
-            particle[i][4] = sin(acos(particle[i][3]));
-        } else {
-            particle[i][4] = -sin(acos(particle[i][3]));
-        }
+        particle[i][3] = cos(angle);                                        //moment's cos to x
+        particle[i][4] = sin(angle);                                        //moment's sin to x
         particle[i][5] = randomPoint(1, -1);                                        //m's cos to z
         
         //cout << "x, y, z: " << particle[i][0] << ", " << particle[i][1] << ", " << particle[i][2] << " cos phi " << particle[i][3] << " sin phi " << particle[i][4] << " cos theta " << particle[i][5] << endl;
@@ -371,24 +372,21 @@ int main() {
     
         for (int j = 0; j < N; j++) {                                                   //MK steps
         
-            if (j%(N/100) == 0) {
+            if (j%(N/10) == 0) {
             
                 cout << "[" << j << "]\n";
             }
         
             for (int i = 0; i < partN; i++) {
             
+                angle = randomPoint(2*M_PI, 0);
+
                 D = randomPoint(1, 0);         //stray module
                 d[0] = D*randomPoint(1, -1);    //dx
                 d[1] = D*randomPoint(1, -1);    //dy ????
                 d[2] = D*randomPoint(1, -1);    //dz
-                d[3] = randomPoint(1, -1);      //cos phi for moment
-                //d[4] = randomPoint(1, -1);      //sin phi for moment
-                if (randomPoint(1, 0) > 0.5) {
-                    d[4] = sqrt(1-d[3]*d[3]);
-                } else {
-                    d[4] = -sqrt(1-d[3]*d[3]);
-                }
+                d[3] = cos(angle);               //cos phi for moment
+                d[4] = sin(angle);               //sin phi for moment
                 d[5] = randomPoint(1, -1);      //cos theta
                 
                 //cout << d[0] << " " << d[1] << " " << d[2] << " " << d[3] << " " << d[4] << " " << d[5] << "\n";
@@ -464,7 +462,7 @@ int main() {
     
     for (int k = 0; k < pointN; k++) {
         
-        cout << "H = " << points[k][0] << "; M = " << points[k][1] << endl;
+        cout << "Ho = " << points[k][0] << "; H = " << points[k][0] - kappa*points[k][1] << "; M = " << points[k][1] << endl;
     }
     
     /*for (int k = 0; k < pointN; k++) {
