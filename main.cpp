@@ -7,9 +7,9 @@
 
 
 double part[500][6];
-int partAmount = 50;
-int mkstepAmount = 50000;
-double lambda = 0;//
+int partAmount = 200;
+int mkstepAmount = 60000;
+double lambda = 1;//
 double phi = 0.2;
 double xi[100];
 
@@ -18,14 +18,15 @@ double Diameter, Length;
 
 double M = 0;
 
-double k = 1.3806E-23;
-double T = 0.7E+16;
-double mu = 1.2566E-6;
-double ximult = k*T/mu;
+double kT = 1E-6;
+double mu = 1E-6;
+double ximult = kT/mu;
 
 double Mm[500];
 
 double P, p1, p2;
+
+double kappa = 0.255;
 
 using namespace std;
 
@@ -145,7 +146,7 @@ bool energyCheck(int a, double xi) {
 			// HERE
 			P -= lambda * (3*e10r*e20r/rr1 - e1e20) /(dist*dist*dist);
 			
-			dist = 0;
+			//dist = 0;
 
 
 			/*for (int i = 0; i < 3; i++) {
@@ -172,7 +173,7 @@ bool energyCheck(int a, double xi) {
             // AND HERE
             P += lambda * (3*e11r*e21r/rr2 - e1e21)/ (dist*dist*dist);
 
-            dist = 0;
+            //dist = 0;
 		}
 	}
 	//change----------------------------------------------------------
@@ -190,8 +191,9 @@ bool energyCheck(int a, double xi) {
 
 double theoreticalMag(double ksi) {
     
-    //ksi = ksi*ximult + phi*(cosh(ksi)/sinh(ksi) - 1/ksi)/3;
-    return /*phi * */(cosh(ksi)/sinh(ksi) - 1/ksi);
+    ksi = (ksi*ximult + phi*(cosh(ksi)/sinh(ksi) - 1/ksi)/3)/ximult;
+
+    return phi * (cosh(ksi)/sinh(ksi) - 1/ksi);
 }
 
 
@@ -215,7 +217,7 @@ int main(int argc, char const *argv[]) {
 
 	for (int i = 0; i < partAmount; i++) {
 
-		angle = random(2*M_PI, 0);
+		angle = random(-M_PI, M_PI);
 		part[i][0] = random(-Diameter/2, Diameter/2);
 		part[i][1] = random(-sqrt(Diameter*Diameter/4 - part[i][0]*part[i][0]), sqrt(Diameter*Diameter/4 - part[i][0]*part[i][0]));
 		part[i][2] = random(-Length, Length);
@@ -224,21 +226,22 @@ int main(int argc, char const *argv[]) {
 		part[i][4] = sin(angle);
 		part[i][5] = random(-1,1);
 
-		cout << "x = " << part[i][0] << " y = " << part[i][1] << " z = " << part[i][2] << " cos phi = " << part[i][3] << " sin phi = " << part[i][4] << " cos theta = " << part[i][5] << endl;
+		//cout << "x = " << part[i][0] << " y = " << part[i][1] << " z = " << part[i][2] << " cos phi = " << part[i][3] << " sin phi = " << part[i][4] << " cos theta = " << part[i][5] << endl;
 	}
 
 
 	//set points where we want to get Magnetizing
 	int pointAmount = 1;
 	double step;
+	cout << "THEORY:\n";
 	for (int i = 0; i < pointAmount; i++) {
 
 		step = i;
-		xi[i] = 0.3 + 0*step/pointAmount;
-		cout << "THEORY:\n";
-		cout << "H = " << xi[i]*ximult << "; xi:= " << xi[i] << "; M = " << theoreticalMag(xi[i]) << "\n";
+		xi[i] = 0.5 + 0*step/pointAmount;
+		cout << "H = " << xi[i]*ximult << "; xi:= " << xi[i] << "; Mo = " << theoreticalMag((xi[i]*ximult-kappa*theoreticalMag(xi[i]))/ximult);
 	}
 	cout << endl;
+	cout << "[---------------------]\n";
 
 
 	//directly main cycle
@@ -249,7 +252,7 @@ int main(int argc, char const *argv[]) {
 			Mm[i] = 0;
 		}
 
-		cout << "[---------------------]\n[";
+		cout << "[";
 		for (int mkstepIterator = 0; mkstepIterator < mkstepAmount; mkstepIterator++) {
 
 			if (mkstepIterator%(mkstepAmount/20) == 0) {
@@ -265,8 +268,8 @@ int main(int argc, char const *argv[]) {
 			for (int partAmountInterator = 0; partAmountInterator < partAmount; partAmountInterator++) {
 
 				//generate way to new statements x y z cos sin cos
-				angle = random(2*M_PI, 0);
-				D = random(0, 1);
+				angle = random(-M_PI, M_PI);
+				D = random(0, 3);
 				d[0] = D*random(-1, 1);
 				d[1] = D*random(-1, 1);
 				d[2] = D*random(-1, 1);
@@ -299,9 +302,9 @@ int main(int argc, char const *argv[]) {
 					}
 				}
 
-				if (mkstepIterator > 0) {
+				if (mkstepIterator > 40000) {
 
-					Mm[partAmountInterator] += part[partAmountInterator][5]/(mkstepAmount); //-30000
+					Mm[partAmountInterator] += part[partAmountInterator][5]/(mkstepAmount-40000); //-30000
 				}
 
 			}
@@ -309,13 +312,14 @@ int main(int argc, char const *argv[]) {
 
 		for (int i = 0; i < partAmount; i++) {
 
-			cout << "Mm " << Mm[i] << endl;
+			//cout << "Mm " << Mm[i] << endl;
 			M += Mm[i];
 			//cout << " " << M << endl;
 		}
 
-		//M /= (M_PI*Diameter*Diameter*Length/4);
-		cout << "xi = " << xi[pointAmountIterator] << "; M = " << M/partAmount << "\n";
+		M /= (M_PI*Diameter*Diameter*Length/4);
+		//M /= partAmount;
+		cout << "xi = " << xi[pointAmountIterator] << "; H = " << xi[pointAmountIterator]*ximult << "; Ho = " << (xi[pointAmountIterator]*ximult - kappa*M) << "; Mpract = " << M << "\n";
 	}
 
 	return 0;
