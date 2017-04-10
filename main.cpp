@@ -7,10 +7,10 @@
 
 
 double part[500][6];
-int partAmount = 200;
-int mkstepAmount = 60000;
-double lambda = 1;//
-double phi = 0.2;
+int partAmount = 500;
+int mkstepAmount = 50000;
+double lambda = 1.31;
+double phi = 0.3;
 double xi[100];
 
 double D, d[6];
@@ -19,7 +19,7 @@ double Diameter, Length;
 double M = 0;
 
 double kT = 1E-6;
-double mu = 1E-6;
+double mu = 1.31E-6;
 double ximult = kT/mu;
 
 double Mm[500];
@@ -48,7 +48,7 @@ bool partCollisionCheck(int N) {
 	if ((part[N][2]+d[2])*(part[N][2]+d[2])>Length/4) {
 
 		//dz = -d[2] + Length - sqrt((2*part[N][2])*(2*part[N][2]));
-		dz = -dz;
+		dz = -dz/2;
 	}
 
 	//wall collisions
@@ -59,10 +59,10 @@ bool partCollisionCheck(int N) {
 
 		if (d[0] > 0) {
 
-			nsX = fmax((-2*a*b - 2*sqrt(Diameter*Diameter/4 * (a*a+1) - b*b))/(2*(a*a+1)), (-2*a*b + 2*sqrt(Diameter*Diameter/4 * (a*a+1) - b*b))/(2*(a*a+1)));
+			nsX = fmax((-a*b - sqrt(Diameter*Diameter/4 * (a*a+1) - b*b))/(a*a+1), (-a*b + sqrt(Diameter*Diameter/4 * (a*a+1) - b*b))/(a*a+1));
 		} else {
 
-			nsX = fmin((-2*a*b - 2*sqrt(Diameter*Diameter/4 * (a*a+1) - b*b))/(2*(a*a+1)), (-2*a*b + 2*sqrt(Diameter*Diameter/4 * (a*a+1) - b*b))/(2*(a*a+1)));
+			nsX = fmin((-a*b - sqrt(Diameter*Diameter/4 * (a*a+1) - b*b))/(a*a+1), (-a*b + sqrt(Diameter*Diameter/4 * (a*a+1) - b*b))/(a*a+1));
 		}
 
 		nsY = a*nsX + b;
@@ -79,6 +79,7 @@ bool partCollisionCheck(int N) {
 		d[0] = dx;
 		d[1] = dy;
 		d[2] = dz;
+
 	} else {
 
 		return false;
@@ -144,7 +145,7 @@ bool energyCheck(int a, double xi) {
                      part[a][5] * part[b][5]);
 
 			// HERE
-			P -= lambda * (3*e10r*e20r/rr1 - e1e20) /(dist*dist*dist);
+			P -= lambda * (3*e10r*e20r/rr1 - e1e20) / (dist*dist*dist);
 			
 			//dist = 0;
 
@@ -171,7 +172,7 @@ bool energyCheck(int a, double xi) {
                     d[5] * part[b][5];
 
             // AND HERE
-            P += lambda * (3*e11r*e21r/rr2 - e1e21)/ (dist*dist*dist);
+            P += lambda * (3*e11r*e21r/rr2 - e1e21) / (dist*dist*dist);
 
             //dist = 0;
 		}
@@ -205,11 +206,15 @@ int main(int argc, char const *argv[]) {
 	//calculate Volume
 	int tubeRatio = 10;
 
-	Diameter = pow(3*partAmount/(2*phi*tubeRatio), 0.3333);
+	Diameter = pow(3*partAmount/(2*phi*tubeRatio), 0.333333333);
 	//cout << partAmount << " " << phi << " " << tubeRatio << "\n";
 	Length = Diameter*tubeRatio;
 
-	cout << "Tube: " << Diameter << " x " << Length << "\n";
+	cout << "\nTube: " << Diameter << " x " << Length << "\n";
+
+	cout << "parts: " << partAmount << endl;
+
+	cout << "lambda: " << lambda << endl;
 
 
 	//generate random points: x y z cos sin cos
@@ -231,14 +236,16 @@ int main(int argc, char const *argv[]) {
 
 
 	//set points where we want to get Magnetizing
-	int pointAmount = 1;
+	int pointAmount = 3;
 	double step;
-	cout << "THEORY:\n";
-	for (int i = 0; i < pointAmount; i++) {
+	//cout << "THEORY:\n";
+	xi[0] = 2.5;
+	//cout << "Ho = " << xi[0]*ximult << "; xi:= " << xi[0] << "; Mo = " << theoreticalMag((xi[0]*ximult-kappa*theoreticalMag(xi[0]))/ximult) << " | " << theoreticalMag(xi[0])<<"\n";
+	for (int i = 1; i < pointAmount; i++) {
 
 		step = i;
-		xi[i] = 0.5 + 0*step/pointAmount;
-		cout << "H = " << xi[i]*ximult << "; xi:= " << xi[i] << "; Mo = " << theoreticalMag((xi[i]*ximult-kappa*theoreticalMag(xi[i]))/ximult);
+		xi[i] = xi[i-1] + 2;
+		//cout << "Ho = " << xi[i]*ximult << "; xi:= " << xi[i] << "; Mo = " << theoreticalMag((xi[i]*ximult-kappa*theoreticalMag(xi[i]))/ximult) << " | " << theoreticalMag(xi[i])<<"\n";
 	}
 	cout << endl;
 	cout << "[---------------------]\n";
@@ -262,14 +269,15 @@ int main(int argc, char const *argv[]) {
                 cout.flush();
             } else if (mkstepIterator == mkstepAmount-1) {
 
-            	cout << "+]" << endl;
+            	cout << "+] ";
+            	cout.flush();
             }
 
 			for (int partAmountInterator = 0; partAmountInterator < partAmount; partAmountInterator++) {
 
 				//generate way to new statements x y z cos sin cos
 				angle = random(-M_PI, M_PI);
-				D = random(0, 3);
+				D = random(0, 2.2);
 				d[0] = D*random(-1, 1);
 				d[1] = D*random(-1, 1);
 				d[2] = D*random(-1, 1);
@@ -302,14 +310,16 @@ int main(int argc, char const *argv[]) {
 					}
 				}
 
-				if (mkstepIterator > 40000) {
+				if (mkstepIterator > 25000) {
 
-					Mm[partAmountInterator] += part[partAmountInterator][5]/(mkstepAmount-40000); //-30000
+					Mm[partAmountInterator] += part[partAmountInterator][5]/(mkstepAmount-25000); //-30000
 				}
 
 			}
 		}
 
+		//cout << endl;
+		M = 0;
 		for (int i = 0; i < partAmount; i++) {
 
 			//cout << "Mm " << Mm[i] << endl;
@@ -318,8 +328,8 @@ int main(int argc, char const *argv[]) {
 		}
 
 		M /= (M_PI*Diameter*Diameter*Length/4);
-		//M /= partAmount;
-		cout << "xi = " << xi[pointAmountIterator] << "; H = " << xi[pointAmountIterator]*ximult << "; Ho = " << (xi[pointAmountIterator]*ximult - kappa*M) << "; Mpract = " << M << "\n";
+		//cout << "xi = " << xi[pointAmountIterator] << "; H = " << xi[pointAmountIterator]*ximult << "; Mt = " << theoreticalMag((xi[pointAmountIterator]*ximult - kappa*M)) << "; Mpract = " << M << "\n";
+		cout << "xi: " << xi[pointAmountIterator] << " M: " << M << " | " << theoreticalMag((xi[pointAmountIterator]*ximult - kappa*theoreticalMag(xi[pointAmountIterator]))) << endl;
 	}
 
 	return 0;
